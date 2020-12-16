@@ -149,7 +149,7 @@ class ImpersonateManager
      */
     public function deferLogout($guard = null)
     {
-        $this->app['auth']->guard($guard)->logout();
+        // $this->app['auth']->guard($guard)->logout();
     }
 
     /**
@@ -159,7 +159,7 @@ class ImpersonateManager
      */
     public function deferLogin($user, $guard = null)
     {
-        $this->app['auth']->guard($guard)->login($user);
+        // $this->app['auth']->guard($guard)->login($user);
     }
 
     /**
