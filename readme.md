@@ -38,7 +38,7 @@
 
 - Require it with Composer:
 ```bash
-composer require openbitapp/laravel-jwt-impersonate
+composer require openbitapp/laravel-passport-impersonate
 ```
 
 - Add the service provider at the end of your `config/app.php`:
