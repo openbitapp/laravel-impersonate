@@ -1,10 +1,9 @@
 <?php
 
-namespace Lab404\Impersonate\Middleware;
+namespace Bitapp\Impersonate\Middleware;
 
 use Closure;
-use Illuminate\Support\Facades\Redirect;
-use Lab404\Impersonate\Services\ImpersonateManager;
+use Bitapp\Impersonate\Services\ImpersonateManager;
 
 class ProtectFromImpersonation
 {
@@ -20,7 +19,7 @@ class ProtectFromImpersonation
         $impersonate_manager = app()->make(ImpersonateManager::class);
 
         if ($impersonate_manager->isImpersonating()) {
-            return Redirect::back();
+            abort(403);
         }
 
         return $next($request);

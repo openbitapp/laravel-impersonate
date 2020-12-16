@@ -1,10 +1,10 @@
 <?php
 
-namespace Lab404\Tests;
+namespace Bitapp\Impersonate\Tests;
 
-use Lab404\Impersonate\ImpersonateServiceProvider;
-use Lab404\Tests\Stubs\Models\User;
-use Lab404\Tests\Stubs\Models\OtherUser;
+use Bitapp\Impersonate\Models\Impersonate\ImpersonateServiceProvider;
+use Bitapp\Impersonate\Models\Tests\Stubs\Models\User;
+use Bitapp\Impersonate\Models\Tests\Stubs\Models\OtherUser;
 use Orchestra\Database\ConsoleServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase

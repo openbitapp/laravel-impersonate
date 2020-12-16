@@ -1,23 +1,22 @@
 <?php
 
-namespace Lab404\Impersonate\Services;
+namespace Bitapp\Impersonate\Services;
 
-use Exception;
-use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
-use Lab404\Impersonate\Events\LeaveImpersonation;
-use Lab404\Impersonate\Events\TakeImpersonation;
-use Lab404\Impersonate\Exceptions\InvalidUserProvider;
-use Lab404\Impersonate\Exceptions\MissingUserProvider;
+use Bitapp\Impersonate\Events\LeaveImpersonation;
+use Bitapp\Impersonate\Events\TakeImpersonation;
+use Bitapp\Impersonate\Exceptions\InvalidUserProvider;
+use Bitapp\Impersonate\Exceptions\MissingUserProvider;
+use Exception;
 
 class ImpersonateManager
 {
-    const REMEMBER_PREFIX = 'remember_web';
-
     /** @var Application $app */
     private $app;
+
+    public $token;
 
     public function __construct(Application $app)
     {
@@ -64,7 +63,7 @@ class ImpersonateManager
 
     public function isImpersonating(): bool
     {
-        return session()->has($this->getSessionKey());
+        return !empty($this->getImpersonatorId());
     }
 
     /**
@@ -72,7 +71,7 @@ class ImpersonateManager
      */
     public function getImpersonatorId()
     {
-        return session($this->getSessionKey(), null);
+        return $this->app['auth']->user()->token()->impersonator_id ?? null;
     }
 
     /**
@@ -80,7 +79,7 @@ class ImpersonateManager
      */
     public function getImpersonator()
     {
-        $id = session($this->getSessionKey(), null);
+        $id = $this->getImpersonatorId();
 
         return is_null($id) ? null : $this->findUserById($id, $this->getImpersonatorGuardName());
     }
@@ -90,7 +89,7 @@ class ImpersonateManager
      */
     public function getImpersonatorGuardName()
     {
-        return session($this->getSessionGuard(), null);
+        return null;
     }
 
     /**
@@ -98,7 +97,7 @@ class ImpersonateManager
      */
     public function getImpersonatorGuardUsingName()
     {
-        return session($this->getSessionGuardUsing(), null);
+        return null;
     }
 
     /**
@@ -109,18 +108,15 @@ class ImpersonateManager
      */
     public function take($from, $to, $guardName = null)
     {
-        $this->saveAuthCookieInSession();
-
         try {
             $currentGuard = $this->getCurrentAuthGuardName();
             session()->put($this->getSessionKey(), $from->getAuthIdentifier());
-            session()->put($this->getSessionGuard(), $currentGuard);
-            session()->put($this->getSessionGuardUsing(), $guardName);
 
-            $this->app['auth']->guard($currentGuard)->quietLogout();
-            $this->app['auth']->guard($guardName)->quietLogin($to);
+            $this->deferLogout($currentGuard);
+            $this->deferLogin($to, $guardName);
 
-        } catch (\Exception $e) {
+            $this->token = $to->createTokenForImpersonator('impersonation', $from)->accessToken;
+        } catch (Exception $e) {
             unset($e);
             return false;
         }
@@ -134,16 +130,13 @@ class ImpersonateManager
     {
         try {
             $impersonated = $this->app['auth']->guard($this->getImpersonatorGuardUsingName())->user();
-            $impersonator = $this->findUserById($this->getImpersonatorId(), $this->getImpersonatorGuardName());
+            $impersonator = $this->getImpersonator();
 
-            $this->app['auth']->guard($this->getCurrentAuthGuardName())->quietLogout();
-            $this->app['auth']->guard($this->getImpersonatorGuardName())->quietLogin($impersonator);
+            $this->deferLogout($this->getCurrentAuthGuardName());
+            $this->deferLogin($impersonator, $this->getImpersonatorGuardName());
 
-            $this->extractAuthCookieFromSession();
-
-            $this->clear();
-
-        } catch (\Exception $e) {
+            $this->token = $impersonator->createToken('impersonated')->accessToken;
+        } catch (Exception $e) {
             unset($e);
             return false;
         }
@@ -153,53 +146,23 @@ class ImpersonateManager
         return true;
     }
 
-    public function clear()
+    /**
+     * @param $guard
+     * @return void
+     */
+    public function deferLogout($guard = null)
     {
-        session()->forget($this->getSessionKey());
-        session()->forget($this->getSessionGuard());
-        session()->forget($this->getSessionGuardUsing());
+        $this->app['auth']->guard($guard)->logout();
     }
 
-    public function getSessionKey(): string
+    /**
+     * @param $guard
+     * @param $user
+     * @return void
+     */
+    public function deferLogin($user, $guard = null)
     {
-        return config('laravel-impersonate.session_key');
-    }
-
-    public function getSessionGuard(): string
-    {
-        return config('laravel-impersonate.session_guard');
-    }
-
-    public function getSessionGuardUsing(): string
-    {
-        return config('laravel-impersonate.session_guard_using');
-    }
-
-    public function getDefaultSessionGuard(): string
-    {
-        return config('laravel-impersonate.default_impersonator_guard');
-    }
-
-    public function getTakeRedirectTo(): string
-    {
-        try {
-            $uri = route(config('laravel-impersonate.take_redirect_to'));
-        } catch (\InvalidArgumentException $e) {
-            $uri = config('laravel-impersonate.take_redirect_to');
-        }
-
-        return $uri;
-    }
-
-    public function getLeaveRedirectTo(): string
-    {
-        try {
-            $uri = route(config('laravel-impersonate.leave_redirect_to'));
-        } catch (\InvalidArgumentException $e) {
-            $uri = config('laravel-impersonate.leave_redirect_to');
-        }
-
-        return $uri;
+        $this->app['auth']->guard($guard)->login($user);
     }
 
     /**
@@ -216,44 +179,5 @@ class ImpersonateManager
         }
 
         return null;
-    }
-
-    protected function saveAuthCookieInSession(): void
-    {
-        $cookie = $this->findByKeyInArray($this->app['request']->cookies->all(), static::REMEMBER_PREFIX);
-        $key = $cookie->keys()->first();
-        $val = $cookie->values()->first();
-
-        if (!$key || !$val) {
-            return;
-        }
-
-        session()->put(static::REMEMBER_PREFIX, [
-            $key,
-            $val,
-        ]);
-    }
-
-    protected function extractAuthCookieFromSession(): void
-    {
-        if (!$session = $this->findByKeyInArray(session()->all(), static::REMEMBER_PREFIX)->first()) {
-            return;
-        }
-
-        $this->app['cookie']->queue($session[0], $session[1]);
-        session()->forget($session);
-    }
-
-    /**
-     * @param array  $values
-     * @param string $search
-     * @return \Illuminate\Support\Collection
-     */
-    protected function findByKeyInArray(array $values, string $search)
-    {
-        return collect($values ?? session()->all())
-            ->filter(function ($val, $key) use ($search) {
-                return strpos($key, $search) !== false;
-            });
     }
 }

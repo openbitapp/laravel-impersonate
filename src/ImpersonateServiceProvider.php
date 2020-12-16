@@ -1,26 +1,22 @@
 <?php
 
-namespace Lab404\Impersonate;
+namespace Bitapp\Impersonate;
 
-use Illuminate\Auth\AuthManager;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Event;
-use Illuminate\View\Compilers\BladeCompiler;
-use Lab404\Impersonate\Guard\SessionGuard;
-use Lab404\Impersonate\Middleware\ProtectFromImpersonation;
-use Lab404\Impersonate\Services\ImpersonateManager;
+use Bitapp\Impersonate\Middleware\ProtectFromImpersonation;
+use Bitapp\Impersonate\Services\ImpersonateManager;
 
 /**
  * Class ServiceProvider
  *
- * @package Lab404\Impersonate
+ * @package Bitapp\Impersonate
  */
 class ImpersonateServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     /** @var string $configName */
-    protected $configName = 'laravel-impersonate';
+    protected $configName = 'laravel-passport-impersonate';
 
     /**
      * Register the service provider.
@@ -40,9 +36,7 @@ class ImpersonateServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->app->alias(ImpersonateManager::class, 'impersonate');
 
         $this->registerRoutesMacro();
-        $this->registerBladeDirectives();
         $this->registerMiddleware();
-        $this->registerAuthDriver();
     }
 
     /**
@@ -64,44 +58,6 @@ class ImpersonateServiceProvider extends \Illuminate\Support\ServiceProvider
     }
 
     /**
-     * Register plugin blade directives.
-     *
-     * @param void
-     * @return  void
-     */
-    protected function registerBladeDirectives()
-    {
-        $this->app->afterResolving('blade.compiler', function (BladeCompiler $bladeCompiler) {
-            $bladeCompiler->directive('impersonating', function ($guard = null) {
-                return "<?php if (is_impersonating({$guard})) : ?>";
-            });
-
-            $bladeCompiler->directive('endImpersonating', function () {
-                return '<?php endif; ?>';
-            });
-
-            $bladeCompiler->directive('canImpersonate', function ($guard = null) {
-                return "<?php if (can_impersonate({$guard})) : ?>";
-            });
-
-            $bladeCompiler->directive('endCanImpersonate', function () {
-                return '<?php endif; ?>';
-            });
-
-            $bladeCompiler->directive('canBeImpersonated', function ($expression) {
-                $args = preg_split("/,(\s+)?/", $expression);
-                $guard = $args[1] ?? null;
-
-                return "<?php if (can_be_impersonated({$args[0]}, {$guard})) : ?>";
-            });
-
-            $bladeCompiler->directive('endCanBeImpersonated', function () {
-                return '<?php endif; ?>';
-            });
-        });
-    }
-
-    /**
      * Register routes macro.
      *
      * @param void
@@ -113,39 +69,9 @@ class ImpersonateServiceProvider extends \Illuminate\Support\ServiceProvider
 
         $router->macro('impersonate', function () use ($router) {
             $router->get('/impersonate/take/{id}/{guardName?}',
-                '\Lab404\Impersonate\Controllers\ImpersonateController@take')->name('impersonate');
+                '\Bitapp\Impersonate\Controllers\ImpersonateController@take')->name('impersonate');
             $router->get('/impersonate/leave',
-                '\Lab404\Impersonate\Controllers\ImpersonateController@leave')->name('impersonate.leave');
-        });
-    }
-
-    /**
-     * @param void
-     * @return  void
-     */
-    protected function registerAuthDriver()
-    {
-        /** @var AuthManager $auth */
-        $auth = $this->app['auth'];
-
-        $auth->extend('session', function (Application $app, $name, array $config) use ($auth) {
-            $provider = $auth->createUserProvider($config['provider']);
-
-            $guard = new SessionGuard($name, $provider, $app['session.store']);
-
-            if (method_exists($guard, 'setCookieJar')) {
-                $guard->setCookieJar($app['cookie']);
-            }
-
-            if (method_exists($guard, 'setDispatcher')) {
-                $guard->setDispatcher($app['events']);
-            }
-
-            if (method_exists($guard, 'setRequest')) {
-                $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
-            }
-
-            return $guard;
+                '\Bitapp\Impersonate\Controllers\ImpersonateController@leave')->name('impersonate.leave');
         });
     }
 

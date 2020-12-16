@@ -1,6 +1,6 @@
 <?php
 
-namespace Lab404\Impersonate\Events;
+namespace Bitapp\Impersonate\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -24,6 +24,8 @@ class LeaveImpersonation
     /**
      * Create a new event instance.
      *
+     * @param \Illuminate\Contracts\Auth\Authenticatable $impersonator
+     * @param \Illuminate\Contracts\Auth\Authenticatable $impersonated
      * @return  void
      */
     public function __construct(Authenticatable $impersonator, Authenticatable $impersonated)

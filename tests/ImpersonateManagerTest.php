@@ -1,11 +1,11 @@
 <?php
 
-namespace Lab404\Tests;
+namespace Bitapp\Impersonate\Tests;
 
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Request;
-use Lab404\Impersonate\Services\ImpersonateManager;
-use Lab404\Tests\Stubs\Models\User;
+use Bitapp\Impersonate\Services\ImpersonateManager;
+use Bitapp\Tests\Stubs\Models\User;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 class ImpersonateManagerTest extends TestCase
@@ -196,8 +196,6 @@ class ImpersonateManagerTest extends TestCase
         $this->app['request'] = (object) ['cookies' => new ParameterBag($cookies)];
 
         $this->manager->take($this->app['auth']->user(), $this->manager->findUserById('user@test.rocks'));
-        $this->assertArrayHasKey(ImpersonateManager::REMEMBER_PREFIX, session()->all());
-        $this->assertEquals([$cookie->getName(), $cookie->getValue()], session()->get(ImpersonateManager::REMEMBER_PREFIX));
 
         // When user's session's auth !== the remember cookie's auth
         // Laravel seems to delete the cookie, so this is what we are faking

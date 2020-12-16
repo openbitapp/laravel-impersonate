@@ -1,6 +1,6 @@
-# Laravel Impersonate
+# Laravel Passport Impersonate
 
-[![Build Status](https://travis-ci.org/404labfr/laravel-impersonate.svg?branch=master)](https://travis-ci.org/404labfr/laravel-impersonate) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/404labfr/laravel-impersonate/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/404labfr/laravel-impersonate/?branch=master)
+**DISCLAIMER:** This is a fork of [lab404/laravel-impersonate](https://github.com/404labfr/laravel-impersonate) patched to work with JWTAuth in a REST API application. I'll Always recommend you to use the original component. This fork is inspired from [Rickycezar/laravel-jwt-impersonate](https://github.com/Rickycezar/laravel-jwt-impersonate).
 
 **Laravel Impersonate** makes it easy to **authenticate as your users**. Add a simple **trait** to your **user model** and impersonate as one of your users in one click.
  
@@ -38,18 +38,18 @@
 
 - Require it with Composer:
 ```bash
-composer require lab404/laravel-impersonate
+composer require openbitapp/laravel-jwt-impersonate
 ```
 
 - Add the service provider at the end of your `config/app.php`:
 ```php
 'providers' => [
     // ...
-    Lab404\Impersonate\ImpersonateServiceProvider::class,
+    Bitapp\Impersonate\ImpersonateServiceProvider::class,
 ],
 ```
 
-- Add the trait `Lab404\Impersonate\Models\Impersonate` to your **User** model.
+- Add the trait `Bitapp\Impersonate\Models\Impersonate` to your **User** model.
 
 ## Simple usage
 

@@ -1,14 +1,14 @@
 <?php
 
-namespace Lab404\Tests;
+namespace Bitapp\Impersonate\Tests;
 
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Event;
-use Lab404\Impersonate\Events\LeaveImpersonation;
-use Lab404\Impersonate\Events\TakeImpersonation;
-use Lab404\Impersonate\Services\ImpersonateManager;
-use Lab404\Tests\Stubs\Models\User;
+use Bitapp\Impersonate\Events\LeaveImpersonation;
+use Bitapp\Impersonate\Events\TakeImpersonation;
+use Bitapp\Impersonate\Services\ImpersonateManager;
+use Bitapp\Impersonate\Tests\Stubs\Models\User;
 
 class EventsTest extends TestCase
 {

@@ -14,7 +14,6 @@
             <file>tests/ImpersonateManagerTest.php</file>
             <file>tests/ModelImpersonateTest.php</file>
             <file>tests/EventsTest.php</file>
-            <file>tests/BladeDirectivesTest.php</file>
             <file>tests/RoutesTest.php</file>
             <file>tests/MiddlewareProtectFromImpersonationTest.php</file>
         </testsuite>

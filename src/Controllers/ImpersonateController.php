@@ -1,11 +1,10 @@
 <?php
 
-namespace Lab404\Impersonate\Controllers;
+namespace Bitapp\Impersonate\Controllers;
 
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Lab404\Impersonate\Services\ImpersonateManager;
+use Bitapp\Impersonate\Services\ImpersonateManager;
 
 class ImpersonateController extends Controller
 {
@@ -26,7 +25,7 @@ class ImpersonateController extends Controller
     /**
      * @param int         $id
      * @param string|null $guardName
-     * @return  RedirectResponse
+     * @return  \Illuminate\Http\JsonResponse
      * @throws  \Exception
      */
     public function take(Request $request, $id, $guardName = null)
@@ -49,20 +48,24 @@ class ImpersonateController extends Controller
 
         $userToImpersonate = $this->manager->findUserById($id, $guardName);
 
-        if ($userToImpersonate->canBeImpersonated()) {
+        if ($userToImpersonate->canBeImpersonatedBy($request->user())) {
             if ($this->manager->take($request->user(), $userToImpersonate, $guardName)) {
-                $takeRedirect = $this->manager->getTakeRedirectTo();
-                if ($takeRedirect !== 'back') {
-                    return redirect()->to($takeRedirect);
+                $takeToken = $this->manager->token;
+                if (!empty($takeToken)) {
+                    return response()->json([
+                        'data' => [
+                            'token' => $takeToken,
+                        ],
+                    ]);
                 }
             }
         }
 
-        return redirect()->back();
+        return abort(403);
     }
 
     /**
-     * @return RedirectResponse
+     * @return \Illuminate\Http\JsonResponse
      */
     public function leave()
     {
@@ -72,10 +75,15 @@ class ImpersonateController extends Controller
 
         $this->manager->leave();
 
-        $leaveRedirect = $this->manager->getLeaveRedirectTo();
-        if ($leaveRedirect !== 'back') {
-            return redirect()->to($leaveRedirect);
+        $leaveToken = $this->manager->token;
+        if (!empty($leaveToken)) {
+            return response()->json([
+                'data' => [
+                    'token' => $leaveToken,
+                ],
+            ]);
         }
-        return redirect()->back();
+
+        return abort(403);
     }
 }

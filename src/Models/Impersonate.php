@@ -1,9 +1,12 @@
 <?php
 
-namespace Lab404\Impersonate\Models;
+namespace Bitapp\Impersonate\Models;
 
+use Bitapp\Impersonate\PersonalAccessTokenFactory;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use Lab404\Impersonate\Services\ImpersonateManager;
+use Bitapp\Impersonate\Services\ImpersonateManager;
+use Illuminate\Container\Container;
 
 trait Impersonate
 {
@@ -25,6 +28,17 @@ trait Impersonate
      * @return  bool
      */
     public function canBeImpersonated()
+    {
+        return true;
+    }
+
+    /**
+     * Return true or false if the user can be impersonate by the impersonator.
+     *
+     * @param \Illuminate\Contracts\Auth\Authenticatable $impersonator
+     * @return  bool
+     */
+    public function canBeImpersonatedBy(Authenticatable $impersonator)
     {
         return true;
     }
@@ -63,5 +77,19 @@ trait Impersonate
         if ($this->isImpersonated()) {
             return app(ImpersonateManager::class)->leave();
         }
+    }
+
+    /**
+     * Create a new personal access token for the user.
+     *
+     * @param  string  $name
+     * @param  array  $scopes
+     * @return \Laravel\Passport\PersonalAccessTokenResult
+     */
+    public function createTokenForImpersonator($name, Authenticatable $impersonator, array $scopes = [])
+    {
+        return Container::getInstance()->make(PersonalAccessTokenFactory::class)->makeImpersonated(
+            $this->getKey(), $impersonator->getKey(), $name, $scopes
+        );
     }
 }

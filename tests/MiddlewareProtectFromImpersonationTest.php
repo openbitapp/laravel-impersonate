@@ -1,10 +1,10 @@
 <?php
 
-namespace Lab404\Tests;
+namespace Bitapp\Impersonate\Tests;
 
 use Illuminate\Http\Request;
-use Lab404\Tests\Stubs\Models\User;
-use Lab404\Impersonate\Middleware\ProtectFromImpersonation;
+use Bitapp\Impersonate\Tests\Stubs\Models\User;
+use Bitapp\Impersonate\Middleware\ProtectFromImpersonation;
 
 class MiddlewareProtectFromImpersonationTest extends TestCase
 {
