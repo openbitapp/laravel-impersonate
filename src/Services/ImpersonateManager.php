@@ -33,7 +33,7 @@ class ImpersonateManager
     public function findUserById($id, $guardName = null)
     {
         if (empty($guardName)) {
-            $guardName = $this->app['config']->get('auth.default.guard', 'web');
+            $guardName = $this->getDefaultGuard();
         }
 
         $providerName = $this->app['config']->get("auth.guards.$guardName.provider");
@@ -183,6 +183,6 @@ class ImpersonateManager
      */
     public function getDefaultGuard()
     {
-        return config('auth.defaults.guard');
+        return $this->app['config']->get('auth.default.guard', 'api');
     }
 }
