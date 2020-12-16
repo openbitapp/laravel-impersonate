@@ -18,7 +18,7 @@ class ImpersonateController extends Controller
     {
         $this->manager = app()->make(ImpersonateManager::class);
         
-        $guard = $this->manager->getDefaultSessionGuard();
+        $guard = $this->manager->getDefaultGuard();
         $this->middleware('auth:' . $guard)->only('take');
     }
 
@@ -30,7 +30,7 @@ class ImpersonateController extends Controller
      */
     public function take(Request $request, $id, $guardName = null)
     {
-        $guardName = $guardName ?? $this->manager->getDefaultSessionGuard();
+        $guardName = $guardName ?? $this->manager->getDefaultGuard();
 
         // Cannot impersonate yourself
         if ($id == $request->user()->getAuthIdentifier() && ($this->manager->getCurrentAuthGuardName() == $guardName)) {

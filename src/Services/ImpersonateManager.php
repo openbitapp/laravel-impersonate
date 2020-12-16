@@ -109,10 +109,7 @@ class ImpersonateManager
     public function take($from, $to, $guardName = null)
     {
         try {
-            $currentGuard = $this->getCurrentAuthGuardName();
-            session()->put($this->getSessionKey(), $from->getAuthIdentifier());
-
-            $this->deferLogout($currentGuard);
+            $this->deferLogout($this->getCurrentAuthGuardName());
             $this->deferLogin($to, $guardName);
 
             $this->token = $to->createTokenForImpersonator('impersonation', $from)->accessToken;
@@ -179,5 +176,13 @@ class ImpersonateManager
         }
 
         return null;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDefaultGuard()
+    {
+        return config('auth.defaults.guard');
     }
 }
