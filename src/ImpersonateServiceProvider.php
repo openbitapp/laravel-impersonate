@@ -47,14 +47,6 @@ class ImpersonateServiceProvider extends \Illuminate\Support\ServiceProvider
     public function boot()
     {
         $this->publishConfig();
-
-        // We want to remove data from storage on real login and logout
-        Event::listen(Login::class, function ($event) {
-            app('impersonate')->clear();
-        });
-        Event::listen(Logout::class, function ($event) {
-            app('impersonate')->clear();
-        });
     }
 
     /**
