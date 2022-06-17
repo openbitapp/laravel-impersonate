@@ -103,16 +103,17 @@ class ImpersonateManager
     /**
      * @param \Illuminate\Contracts\Auth\Authenticatable $from
      * @param \Illuminate\Contracts\Auth\Authenticatable $to
-     * @param string|null                         $guardName
+     * @param string|null                                $guardName
+     * @param array                                      $scopes
      * @return bool
      */
-    public function take($from, $to, $guardName = null)
+    public function take($from, $to, $guardName = null, array $scopes = [])
     {
         try {
             $this->deferLogout($this->getCurrentAuthGuardName());
             $this->deferLogin($to, $guardName);
 
-            $this->token = $to->createTokenForImpersonator('impersonation', $from)->accessToken;
+            $this->token = $to->createTokenForImpersonator('impersonation', $from, $scopes)->accessToken;
         } catch (Exception $e) {
             unset($e);
             return false;

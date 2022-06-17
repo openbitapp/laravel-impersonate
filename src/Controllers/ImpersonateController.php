@@ -49,7 +49,7 @@ class ImpersonateController extends Controller
         $userToImpersonate = $this->manager->findUserById($id, $guardName);
 
         if ($userToImpersonate->canBeImpersonatedBy($request->user())) {
-            if ($this->manager->take($request->user(), $userToImpersonate, $guardName)) {
+            if ($this->manager->take($request->user(), $userToImpersonate, $guardName, $request->get('scope') ? explode(',', $request->get('scope')) : [])) {
                 $takeToken = $this->manager->token;
                 if (!empty($takeToken)) {
                     return response()->json([
